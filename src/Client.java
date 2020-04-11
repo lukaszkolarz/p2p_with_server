@@ -148,21 +148,23 @@ public class Client implements ActionListener {
         client.sendString("connect");
         opponentName = list.getSelectedValue().toString();
         client.sendString(opponentName);
-        String message = "";
-        message = listener.getMessage();
         while (true) {
+            String message = "";
+            message = listener.getMessage();
             if (message.equals("invitation accepted")) {
                 String ip = listener.getMessage();
                 String port = listener.getMessage();
                 clientClientSocket = new CliSocket(ip, Integer.parseInt(port));
                 break;
-            } else {
+            } else if (message.equals("invitation refused")){
                 JOptionPane.showMessageDialog(null, "Connection refused by the user",
                         "WARNING", JOptionPane.WARNING_MESSAGE);
-                chooseHost();
+                list.clearSelection();
+                updateHostNames();
             }
         }
         chooseHostWindow.setVisible(false);
+        System.out.println("Connection");
         initSocket();
     }
 
@@ -250,7 +252,7 @@ public class Client implements ActionListener {
         }
     }
 
-    private boolean getIsReady(){
+    public boolean getIsReady(){
         return isReady;
     }
 
@@ -267,9 +269,9 @@ public class Client implements ActionListener {
         return opponentName;
     }
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         Client client = new Client();
         //client.writeToHost("Hello from the other side");
-}
+    }
 }
 

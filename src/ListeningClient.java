@@ -16,24 +16,20 @@ public class ListeningClient extends Thread{
 
     @Override
     public void run() {
-        String input;
         while (true) {
+            String input;
             input = receiveString();
             try{
             if (input.equals("new connection")) {
                 String peerName = receiveString();
                 int response = JOptionPane.showConfirmDialog(null,
-                        "Do you want to play with " + peerName + "?",
+                        "Do you want to connect with " + peerName + "?",
                         "Checks", JOptionPane.YES_NO_OPTION);
                 if (response == 0) {
                     this.client.accept(peerName);
                 } else {
                     this.client.refuse(peerName);
                 }
-            } else if (input.equals("invitation refused")) {
-                JOptionPane.showMessageDialog(null,
-                        client.getOpponentName() + " refused your invitation",
-                        "Refuse", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 setMessage(input);
             }
