@@ -15,7 +15,7 @@ public class SrvThread implements Runnable {
     private ArrayList<String> names;
     private Integer namesSize;
     private SrvThread opponent = null;
-    private boolean isConnected = false, waiting = false;
+    private boolean isConnected = false;
 
     public SrvThread(Socket client) {
         names = new ArrayList<>();
@@ -31,6 +31,7 @@ public class SrvThread implements Runnable {
 
         while (true) {
             message = read();
+            System.out.println(message);
             if (message.equals("refresh")) {
                 sendAllNames();
             } else if (message.equals("connect")) {
@@ -45,12 +46,10 @@ public class SrvThread implements Runnable {
             }
         }
         try {
-            communicator.removeByName(this.name);
             client.close();
             in.close();
             out.close();
         } catch (IOException e) {
-            String opponentName = read();
             System.out.println("Cannot close connection");
         }
     }
@@ -61,8 +60,6 @@ public class SrvThread implements Runnable {
             this.opponent.setOpponent(this);
             this.opponent.send("new connection");
             this.opponent.send(this.name);
-            this.waiting = true;
-            new Wait(this, name).start();
             }
         }
 
@@ -123,6 +120,7 @@ public class SrvThread implements Runnable {
             this.send(this.opponent.getIp().substring(1));
             this.send("8123");
             communicator.removeByName(this.name);
+            communicator.removeByName(opponent.name);
             return true;
         }
         return false;
@@ -131,7 +129,6 @@ public class SrvThread implements Runnable {
     public synchronized void invitationRefused(){
         if (this.opponent!= null){
             this.opponent = null;
-            this.waiting = false;
         }
     }
 
@@ -141,10 +138,6 @@ public class SrvThread implements Runnable {
 
     public boolean getIsConnected() {
         return isConnected;
-    }
-
-    public void stopToWait() {
-       this.waiting = false;
     }
 
     public synchronized String getIp() {
@@ -159,28 +152,5 @@ public class SrvThread implements Runnable {
     public void setOpponent(SrvThread opponent){
         this.opponent = opponent;
     }
-}
-
-
-    class Wait extends Thread {
-        private SrvThread server;
-
-        Wait(SrvThread server, String user) {
-            this.server = server;
-        }
-
-    public void run() {
-        try {
-            Thread.sleep(60000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        if (!this.server.getIsConnected()){
-            this.server.invitationRefused();
-            this.server.setNullOpponent();
-        }
-        this.server.stopToWait();
-    }
-
 }
 

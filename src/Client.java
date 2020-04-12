@@ -144,28 +144,23 @@ public class Client implements ActionListener {
     }
 
 
-    private void assignConnection(){
+    private void assignConnection(String opponentName){
         client.sendString("connect");
-        opponentName = list.getSelectedValue().toString();
         client.sendString(opponentName);
-        while (true) {
-            String message = "";
-            message = listener.getMessage();
-            if (message.equals("invitation accepted")) {
-                String ip = listener.getMessage();
-                String port = listener.getMessage();
-                clientClientSocket = new CliSocket(ip, Integer.parseInt(port));
-                break;
-            } else if (message.equals("invitation refused")){
-                JOptionPane.showMessageDialog(null, "Connection refused by the user",
-                        "WARNING", JOptionPane.WARNING_MESSAGE);
-                list.clearSelection();
-                updateHostNames();
-            }
+        String message = "";
+        message = listener.getMessage();
+        if (message.equals("invitation accepted")) {
+            String ip = listener.getMessage();
+            String port = listener.getMessage();
+            clientClientSocket = new CliSocket(ip, Integer.parseInt(port));
+            chooseHostWindow.setVisible(false);
+            initSocket();
+        } else if (message.equals("invitation refused")){
+            JOptionPane.showMessageDialog(null, "Connection refused by the user",
+                    "WARNING", JOptionPane.WARNING_MESSAGE);
+            list.clearSelection();
+            updateHostNames();
         }
-        chooseHostWindow.setVisible(false);
-        System.out.println("Connection");
-        initSocket();
     }
 
 
@@ -200,7 +195,7 @@ public class Client implements ActionListener {
         } else if (e.getSource() == refreshButton){
             updateHostNames();
         } else if (e.getSource() == connectHostButton){
-            assignConnection();
+            assignConnection(list.getSelectedValue().toString());
         }
     }
 
@@ -227,12 +222,16 @@ public class Client implements ActionListener {
             clientServerSocket.initSocket();
             isServer = true;
             writeToHost("connected");
+
             System.out.println(receiveFromHost());
+
             isReady = true;
         } else if (clientServerSocket == null){
             clientClientSocket.newClientSocket();
             isServer = false;
+
             System.out.println(receiveFromHost());
+
             writeToHost("connected");
             isReady = true;
         }   else {
