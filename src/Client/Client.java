@@ -1,11 +1,13 @@
+package Client;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.util.ArrayList;
 
+/**
+ * The Client is a class to managing connection with server ant choosing perr to connect with.
+ * Client manage also connection p2p.
+ */
 public class Client implements ActionListener {
 
     private String name, opponentName;
@@ -21,14 +23,18 @@ public class Client implements ActionListener {
     private ListeningClient listener;
     private ClientServerSocket clientServerSocket;
     private String  clientServerPort = "8123";
-    private boolean isServer, isReady=false;
+    private boolean isServer, isReady=true;
 
-
+    /**
+     * constructor
+     */
     public Client(){
         displayInitWindow();
     }
 
-
+    /**
+     * refreshes list of users connected with server in the moment
+     */
     private void updateHostNames(){
         client.sendString("refresh");
         hostsNamesAmount = Integer.parseInt(listener.getMessage());
@@ -41,7 +47,9 @@ public class Client implements ActionListener {
         }
     }
 
-
+    /**
+     * GUI - inserting connection data
+     */
     private void displayInitWindow(){
         connectionWindow = new JFrame();                                            //define connection window
         connectionWindow.setTitle("Connection with server");
@@ -49,8 +57,8 @@ public class Client implements ActionListener {
         connectionWindow.setSize(300,130);
         connectionWindow.setResizable(false);
 
-        JLabel serverAddressLabel = new JLabel("Server address:");              //add IP label
-        serverAddressLabel.setBounds(20,20,130,20);               //older reshape()
+        JLabel serverAddressLabel = new JLabel("Server address:");             //add IP label
+        serverAddressLabel.setBounds(20,20,130,20);              //older reshape()
         connectionWindow.add(serverAddressLabel);
 
         serverAddressInput = new JTextField("");                                    //add IP textfield
@@ -76,7 +84,9 @@ public class Client implements ActionListener {
         connectionWindow.setVisible(true);
     }
 
-
+    /**
+     * GUI - inserting username
+     */
     private void insertName(){
         insertNameWindow = new JFrame();
         insertNameWindow.setTitle("Connection with server");
@@ -102,7 +112,9 @@ public class Client implements ActionListener {
         insertNameWindow.setVisible(true);
     }
 
-
+    /**
+     * GUI - choosing right host
+     */
     public void chooseHost(){
 
         chooseHostWindow = new JFrame();
@@ -143,7 +155,10 @@ public class Client implements ActionListener {
         chooseHostWindow.setVisible(true);
     }
 
-
+    /**
+     * send a message with p2p connection request to server
+     * @param opponentName concrete user, who is asked for connection
+     */
     private void assignConnection(String opponentName){
         client.sendString("connect");
         client.sendString(opponentName);
@@ -163,7 +178,10 @@ public class Client implements ActionListener {
         }
     }
 
-
+    /**
+     * invoke when the action occurs
+     * @param e action
+     */
     @Override
     public void actionPerformed(ActionEvent e) {                                    //buton handler
         if (e.getSource() == connectButton) {
@@ -199,7 +217,10 @@ public class Client implements ActionListener {
         }
     }
 
-
+    /**
+     * accepts asking for connection
+     * @param name peer username
+     */
     public void accept(String name){
         opponentName = name;
         client.sendString("accept");
@@ -209,31 +230,35 @@ public class Client implements ActionListener {
         initSocket();
     }
 
-
+    /**
+     * refuses asking for connection
+     * @param name peer username
+     */
     public void refuse(String name){
         opponentName = name;
         client.sendString("refuse");
         list.clearSelection();
-}
+    }
 
-
-    public void initSocket(){
+    /**
+     * initializes p2p socket
+     * depends on situation it will be CliSocket or ClientServerSocket
+     */
+    public synchronized void initSocket(){
         if (clientClientSocket == null){
             clientServerSocket.initSocket();
             isServer = true;
-            writeToHost("connected");
-
+            isReady = false;
+            notify();
+            writeToHost("connected with other host");
             System.out.println(receiveFromHost());
-
-            isReady = true;
         } else if (clientServerSocket == null){
             clientClientSocket.newClientSocket();
             isServer = false;
-
+            isReady = false;
+            notify();
             System.out.println(receiveFromHost());
-
-            writeToHost("connected");
-            isReady = true;
+            writeToHost("connected with other host");
         }   else {
             JOptionPane.showMessageDialog(null,
                     "Cannot connect with host",
@@ -242,8 +267,12 @@ public class Client implements ActionListener {
         }
     }
 
-
+    /**
+     * sends String to peer
+     * @param data String which will be write
+     */
     public void writeToHost(String data){
+        waiting();
         if (isServer){
             clientServerSocket.sendString(data);
         }else{
@@ -251,12 +280,12 @@ public class Client implements ActionListener {
         }
     }
 
-    public boolean getIsReady(){
-        return isReady;
-    }
-
-
+    /**
+     * receiving String from per
+     * @return received string
+     */
     public String receiveFromHost(){
+        waiting();
         if (isServer){
             return clientServerSocket.receiveString();
         }else{
@@ -264,13 +293,16 @@ public class Client implements ActionListener {
         }
     }
 
-    public String getOpponentName() {
-        return opponentName;
-    }
-
-    public static void main(String[] args) {
-        Client client = new Client();
-        //client.writeToHost("Hello from the other side");
+    /**
+     * lets receiveFromHost and sendToHost wait for initialize p2p connection
+     */
+    private synchronized void waiting() {
+        while (isReady) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
-

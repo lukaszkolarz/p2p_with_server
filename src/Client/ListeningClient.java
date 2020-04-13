@@ -1,19 +1,34 @@
+package Client;
+
 import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 
+/**
+ * The Client.ListeningClient class creates other thread using to listen on the connected socket.
+ * Thread synchronization mechanisms are implemented inside.
+ */
 public class ListeningClient extends Thread{
+
     private BufferedReader in;
     private String message;
     private Client client;
     private boolean haveMessage = false;
 
+    /**
+     * constructor
+     * @param in connected socket reading buffer
+     * @param client concrete Client
+     */
     public ListeningClient(BufferedReader in, Client client){
         this.in = in;
         this.client = client;
         message = "";
     }
 
+    /**
+     * divides received packets to different actions
+     */
     @Override
     public void run() {
         while (true) {
@@ -40,7 +55,10 @@ public class ListeningClient extends Thread{
         }
     }
 
-
+    /**
+     * receives messages
+     * @return received message in String
+     */
     private String receiveString(){
         String line = null;
         try{
@@ -51,6 +69,10 @@ public class ListeningClient extends Thread{
         return line;
     }
 
+    /**
+     * waits until there is no message
+     * @return message
+     */
     public synchronized String getMessage(){
         while(!this.haveMessage){
             try {
@@ -64,6 +86,10 @@ public class ListeningClient extends Thread{
         return this.message;
     }
 
+    /**
+     * waits until there is unread message
+     * @param sms received message
+     */
     public synchronized void setMessage(String sms){
         while(this.haveMessage){
             try {

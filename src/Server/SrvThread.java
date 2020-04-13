@@ -1,3 +1,5 @@
+package Server;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -6,23 +8,34 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 
+/**
+ * The SrvThread class describes one thread which is connected with one host.
+ */
 public class SrvThread implements Runnable {
+
     private Socket client;
     private BufferedReader in;
     private PrintWriter out;
     private String name;
     private ServerSingleton communicator;
+    private SrvThread opponent = null;
     private ArrayList<String> names;
     private Integer namesSize;
-    private SrvThread opponent = null;
-    private boolean isConnected = false;
 
+    /**
+     * constructor of the class
+     * @param client connected ServerSocket
+     */
     public SrvThread(Socket client) {
-        names = new ArrayList<>();
         communicator = ServerSingleton.getSingleton();
         this.client = client;
+        names = new ArrayList<>();
     }
 
+    /**
+     * override function to start thread
+     */
+    @Override
     public void run() {
         streamInit();
         name = read();
@@ -31,7 +44,6 @@ public class SrvThread implements Runnable {
 
         while (true) {
             message = read();
-            System.out.println(message);
             if (message.equals("refresh")) {
                 sendAllNames();
             } else if (message.equals("connect")) {
@@ -54,6 +66,9 @@ public class SrvThread implements Runnable {
         }
     }
 
+    /**
+     * receives invited opponent's name and starts communication between threads
+     */
     private synchronized void sendInvitation(){
         String opponentName = read();
         if ((this.opponent = communicator.getThreadByName(opponentName)) != null){
@@ -63,17 +78,25 @@ public class SrvThread implements Runnable {
             }
         }
 
-        private synchronized void accept(){
+    /**
+     * accepts invitation
+     */
+    private synchronized void accept(){
             this.opponent.send("invitation accepted");
             this.opponent.invitationAccepted();
         }
 
-        private synchronized void refuse(){
+    /**
+     * refuses invitation
+     */
+    private synchronized void refuse(){
             this.opponent.send("invitation refused");
             this.opponent.invitationRefused();
         }
 
-
+    /**
+     * initializes streams to connected socket
+     */
     public void streamInit(){
         try{
             this.in = new BufferedReader((new InputStreamReader(client.getInputStream())));
@@ -84,7 +107,10 @@ public class SrvThread implements Runnable {
         }
     }
 
-
+    /**
+     * reads String from socket buffer
+     * @return read String
+     */
     public String read(){
         String line = null;
         try{
@@ -95,62 +121,61 @@ public class SrvThread implements Runnable {
         return line;
     }
 
-
+    /**
+     * sends String to socket buffer
+     * @param line String which will be send
+     */
     public void send(String line){
         out.println(line);
     }
 
-
-    private void updateNames(){
+    /**
+     * get all connected hosts and sends their names
+     */
+    private void sendAllNames(){
         names = communicator.getAllNames();
         namesSize = names.size();
-    }
-
-    private void sendAllNames(){
-        updateNames();
         send(namesSize.toString());
         for (int i=0; i<namesSize; i++){
             send(names.get(i));
         }
     }
 
-    public synchronized boolean invitationAccepted(){
+    /**
+     * sends back the invitation had been accepted
+     */
+    public synchronized void invitationAccepted(){
         if (this.opponent != null){
-            this.isConnected = true;
             this.send(this.opponent.getIp().substring(1));
             this.send("8123");
             communicator.removeByName(this.name);
             communicator.removeByName(opponent.name);
-            return true;
         }
-        return false;
     }
 
+    /**
+     * sends back that the invitation has been rejected
+     */
     public synchronized void invitationRefused(){
         if (this.opponent!= null){
             this.opponent = null;
         }
     }
 
-    public void setNullOpponent() {
-        this.opponent = null;
-    }
-
-    public boolean getIsConnected() {
-        return isConnected;
-    }
-
-    public synchronized String getIp() {
+    /**
+     * returns 'client' ip
+     * @return ip address in String
+     */
+    public String getIp() {
         InetAddress ip = this.client.getInetAddress();
         return ip.toString();
     }
 
-    public Socket getSocket(){
-        return this.client;
-    }
-
+    /**
+     * sets opponent field
+     * @param opponent SrvThread object
+     */
     public void setOpponent(SrvThread opponent){
         this.opponent = opponent;
     }
 }
-

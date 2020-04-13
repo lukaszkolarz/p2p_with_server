@@ -1,3 +1,5 @@
+package Client;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -5,13 +7,22 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+/**
+ * The ServerSocket implement server socket in ONE of two hosts which
+ * want to connect i p2p way.
+ */
 public class ClientServerSocket {
+
     private Socket client;
     private ServerSocket server;
     private PrintWriter out;
     private BufferedReader in;
     int port;
 
+    /**
+     * constructor
+     * @param port on this port client will listen
+     */
     public ClientServerSocket(String port){
         this.port = Integer.parseInt(port);
         try {
@@ -22,7 +33,9 @@ public class ClientServerSocket {
         }
     }
 
-
+    /**
+     * implementation interrupts of accepting connection
+     */
     public void acceptConnection() {
         try {
             client = server.accept();
@@ -31,6 +44,9 @@ public class ClientServerSocket {
         }
     }
 
+    /**
+     * initializes sockets reading and writing buffer
+     */
     public void initSocket(){
         try {
             in = new BufferedReader((new InputStreamReader(client.getInputStream())));
@@ -41,6 +57,10 @@ public class ClientServerSocket {
         }
     }
 
+    /**
+     * receives String from socket receiving buffer
+     * @return received buffer as a String
+     */
         public String receiveString(){
             String line = null;
             try{
@@ -51,5 +71,9 @@ public class ClientServerSocket {
             return line;
         }
 
-        public void sendString(String line){ out.println(line); }
+    /**
+     * puts String to sending buffer
+     * @param line will be put to sending buffer
+     */
+    public void sendString(String line){ out.println(line); }
 }
