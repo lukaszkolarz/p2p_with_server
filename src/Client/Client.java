@@ -3,6 +3,8 @@ package Client;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.io.Serializable;
 
 /**
  * The Client is a class to managing connection with server ant choosing perr to connect with.
@@ -250,15 +252,15 @@ public class Client implements ActionListener {
             isServer = true;
             isReady = false;
             notify();
-            writeToHost("connected with other host");
-            System.out.println(receiveFromHost());
+            send("connected with other host");
+            System.out.println(receiveString());
         } else if (clientServerSocket == null){
             clientClientSocket.newClientSocket();
             isServer = false;
             isReady = false;
             notify();
-            System.out.println(receiveFromHost());
-            writeToHost("connected with other host");
+            System.out.println(receiveString());
+            send("connected with other host");
         }   else {
             JOptionPane.showMessageDialog(null,
                     "Cannot connect with host",
@@ -271,7 +273,7 @@ public class Client implements ActionListener {
      * sends String to peer
      * @param data String which will be write
      */
-    public void writeToHost(String data){
+    public void send(String data){
         waiting();
         if (isServer){
             clientServerSocket.sendString(data);
@@ -281,15 +283,187 @@ public class Client implements ActionListener {
     }
 
     /**
-     * receiving String from per
-     * @return received string
+     * sends Integer to peer
+     * @param data Integer which will be write
      */
-    public String receiveFromHost(){
+    public void send(Integer data){
+        waiting();
+        if (isServer){
+            clientServerSocket.sendString(String.valueOf(data));
+        }else{
+            clientClientSocket.sendString(String.valueOf(data));
+        }
+    }
+
+    /**
+     * sends Character to peer
+     * @param data Character which will be write
+     */
+    public void send(Character data){
+        waiting();
+        if (isServer){
+            clientServerSocket.sendString(Character.toString(data));
+        }else{
+            clientClientSocket.sendString(Character.toString(data));
+        }
+    }
+
+    /**
+     * sends Long to peer
+     * @param data Long which will be write
+     */
+    public void send(Long data){
+        waiting();
+        if (isServer){
+            clientServerSocket.sendString(String.valueOf(data));
+        }else{
+            clientClientSocket.sendString(String.valueOf(data));
+        }
+    }
+
+    /**
+     * sends Float to peer
+     * @param data Float which will be write
+     */
+    public void send(Float data) {
+        waiting();
+        if (isServer) {
+            clientServerSocket.sendString(String.valueOf(data));
+        } else {
+            clientClientSocket.sendString(String.valueOf(data));
+        }
+    }
+
+    /**
+     * sends Double to peer
+     * @param data Double which will be write
+     */
+    public void send(Double data) {
+        waiting();
+        if (isServer) {
+            clientServerSocket.sendString(String.valueOf(data));
+        } else {
+            clientClientSocket.sendString(String.valueOf(data));
+        }
+    }
+
+    /**
+     * sends objects which implements Serializable
+     * @param object must implement Serializable
+     */
+    public void send(Serializable object){
+        waiting();
+        try{
+            if (isServer) {
+                clientServerSocket.getObjectOut().writeObject(object);
+            } else {
+                clientClientSocket.getObjectOut().writeObject(object);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+
+    /**
+     * receiving String from peer
+     * @return received String
+     */
+    public String receiveString(){
         waiting();
         if (isServer){
             return clientServerSocket.receiveString();
         }else{
             return clientClientSocket.receiveString();
+        }
+    }
+
+    /**
+     * receiving Integer from peer
+     * @return received Integer
+     */
+    public Integer receiveInteger(){
+        waiting();
+        if (isServer){
+            return Integer.parseInt(clientServerSocket.receiveString());
+        }else{
+            return Integer.parseInt(clientClientSocket.receiveString());
+        }
+    }
+
+    /**
+     * receiving Character from peer
+     * @return received Character
+     */
+    public Character receiveCharacter(){
+        waiting();
+        if (isServer){
+            return clientServerSocket.receiveString().charAt(0);
+        }else{
+            return clientClientSocket.receiveString().charAt(0);
+        }
+    }
+
+    /**
+     * receiving Long from peer
+     * @return received Long
+     */
+    public Long receiveLong(){
+        waiting();
+        if (isServer){
+            return Long.parseLong(clientServerSocket.receiveString());
+        }else{
+            return Long.parseLong(clientClientSocket.receiveString());
+        }
+    }
+
+    /**
+     * receiving Float from peer
+     * @return received Float
+     */
+    public Float receiveFloat(){
+        waiting();
+        if (isServer){
+            return Float.parseFloat(clientServerSocket.receiveString());
+        }else{
+            return Float.parseFloat(clientClientSocket.receiveString());
+        }
+    }
+
+    /**
+     * receiving Double from peer
+     * @return received Double
+     */
+    public Double receiveDouble(){
+        waiting();
+        if (isServer){
+            return Double.parseDouble(clientServerSocket.receiveString());
+        }else{
+            return Double.parseDouble(clientClientSocket.receiveString());
+        }
+    }
+
+    /**
+     * sends objects which implement Serializable via socket
+     * @return received object
+     */
+    public Serializable receiveObject(){
+        waiting();
+        try {
+            if (isServer) {
+                return (Serializable) clientServerSocket.getObjectIn().readObject();
+            } else {
+                return (Serializable) clientClientSocket.getObjectIn().readObject();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } catch (ClassNotFoundException e) {
+            System.out.println("Invalid class");
+            e.printStackTrace();
+            return null;
         }
     }
 

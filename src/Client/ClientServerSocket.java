@@ -1,9 +1,6 @@
 package Client;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -76,4 +73,20 @@ public class ClientServerSocket {
      * @param line will be put to sending buffer
      */
     public void sendString(String line){ out.println(line); }
+
+    /**
+     * @return stream to send objects
+     * @throws IOException - if an I/O error occurs when creating the output stream or if the socket is not connected
+     */
+    public ObjectOutputStream getObjectOut() throws IOException {
+        return new ObjectOutputStream(client.getOutputStream());
+    }
+
+    /**
+     * @return stream to receive objects
+     * @throws IOException - if an I/O error occurs when creating the output stream or if the socket is not connected
+     */
+    public ObjectInputStream getObjectIn() throws IOException {
+        return new ObjectInputStream(client.getInputStream());
+    }
 }

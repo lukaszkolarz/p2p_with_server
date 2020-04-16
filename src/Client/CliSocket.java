@@ -1,9 +1,6 @@
 package Client;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -65,5 +62,24 @@ public class CliSocket {
      */
     public void sendString(String message){ out.println(message); }
 
+    /**
+     * @return input stream
+     */
     public BufferedReader getIn(){ return this.in; }
+
+    /**
+     * @return stream to send objects
+     * @throws IOException - if an I/O error occurs when creating the output stream or if the socket is not connected
+     */
+    public ObjectOutputStream getObjectOut() throws IOException {
+        return new ObjectOutputStream(clientSocket.getOutputStream());
+    }
+
+    /**
+     * @return stream to receive objects
+     * @throws IOException - if an I/O error occurs when creating the output stream or if the socket is not connected
+     */
+    public ObjectInputStream getObjectIn() throws IOException {
+        return new ObjectInputStream(clientSocket.getInputStream());
+    }
 }
